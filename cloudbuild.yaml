@@ -1,0 +1,29 @@
+# Builds the Delta image with NEXT_PUBLIC_* baked in at build time, then pushes
+# it to Artifact Registry. Invoked via `gcloud builds submit --config cloudbuild.yaml`.
+substitutions:
+  _IMAGE: asia-south1-docker.pkg.dev/${PROJECT_ID}/delta/delta:latest
+  _FB_API_KEY: ''
+  _FB_AUTH_DOMAIN: ''
+  _FB_PROJECT_ID: ''
+  _FB_STORAGE_BUCKET: ''
+  _FB_SENDER_ID: ''
+  _FB_APP_ID: ''
+options:
+  logging: CLOUD_LOGGING_ONLY
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg=NEXT_PUBLIC_FIREBASE_API_KEY=${_FB_API_KEY}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_FB_AUTH_DOMAIN}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_FB_PROJECT_ID}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_FB_STORAGE_BUCKET}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_FB_SENDER_ID}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_APP_ID=${_FB_APP_ID}
+      - -t
+      - ${_IMAGE}
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args: ['push', '${_IMAGE}']
+images:
+  - ${_IMAGE}
