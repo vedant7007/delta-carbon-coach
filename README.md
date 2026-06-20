@@ -9,17 +9,32 @@ Cloud Run.
 
 **🔗 Live:** https://delta-916653092249.asia-south1.run.app
 
-### Lighthouse (PageSpeed Insights, live URL)
+### Lighthouse (PageSpeed Insights, live URL — public pages `/`, `/login`, `/methodology`)
 
-| Page | Mobile | Desktop |
-|------|--------|---------|
-| Landing (`/`) | Perf **100** · A11y **100** · BP **100** · SEO **100** | Perf **100** · A11y **100** · BP **100** · SEO **100** |
-| Login / Methodology | A11y **100** · BP **100** · SEO **100** · Perf 70–72¹ | Perf 86–100 · A11y **100** |
+| Form factor | Accessibility | Best Practices | SEO | Performance |
+|-------------|:-:|:-:|:-:|:-:|
+| **Desktop** | **100** | **100** | **100** | **99–100** |
+| **Mobile**  | **100** | **100** | **100** | 70–73¹ |
 
-¹ Desktop FCP 0.2–0.3 s / LCP 0.5 s on every page (TBT ≈ 0, CLS 0, server < 30 ms) — the app is
-fast. The lower *mobile* numbers on the heavier public pages are PageSpeed's slow-4G throttle plus
-its test agent's distance to the Mumbai (`asia-south1`) region, not the app; a mobile run from India
-scores far higher. The region is deliberately Mumbai for the India-first audience.
+¹ A11y / Best Practices / SEO are **100 on every page, both form factors**. Desktop Performance is
+99–100 (FCP ~0.2 s, LCP ~0.5 s, **TBT 0, CLS 0**, server < 30 ms) — the app itself is fast. Mobile
+Performance is constrained by PageSpeed's slow-4G throttle **plus its test agent's network distance to
+the Mumbai (`asia-south1`) region** — not app code (desktop from the same agent is ~100 with clean core
+metrics). The region is deliberately Mumbai for the India-first audience; a mobile run from India scores
+materially higher. Protected pages (dashboard/simulate/insights) require auth so PSI can't measure them;
+they share the same shell with lazy-loaded charts.
+
+## Screenshots
+
+| Dashboard | What-if simulator |
+|-----------|-------------------|
+| ![Dashboard — total, category breakdown, trend](docs/screenshots/dashboard.png) | ![Simulator — live sliders and annual projection](docs/screenshots/simulate.png) |
+
+| Insights | Methodology (auditable numbers) |
+|----------|---------------------------------|
+| ![Insights — ranked highest-leverage actions](docs/screenshots/insights.png) | ![Methodology — every factor, source, uncertainty](docs/screenshots/methodology.png) |
+
+![Landing page](docs/screenshots/landing.png)
 
 ---
 
@@ -65,6 +80,20 @@ And the entire app is **100% usable with the AI disabled** — every AI feature 
   and **Firestore** in production — so the whole app is runnable end-to-end without any cloud setup.
 
 ---
+
+## Tech stack
+
+| Layer | Choice |
+|-------|--------|
+| Framework | Next.js 15 (App Router) · React 19 · TypeScript `strict` |
+| Styling / UI | Tailwind CSS v4 · Radix UI primitives (accessible by default) · Recharts |
+| Validation | Zod (shared client + server schemas) |
+| Auth | Firebase Auth (client) + Firebase Admin SDK / ADC (server) |
+| Data | Cloud Firestore (deny-all client rules) + in-memory fallback for local/demo/E2E |
+| AI | Google Gemini (`gemini-2.5-flash`), server-only, key in Secret Manager |
+| Testing | Vitest + Testing Library + vitest-axe · Playwright + @axe-core/playwright |
+| Tooling / CI | ESLint · Prettier · GitHub Actions (lint · typecheck · test · build · E2E) |
+| Hosting | Docker (standalone, non-root) → Cloud Build → Cloud Run (`asia-south1`) |
 
 ## Features (locked scope)
 
@@ -194,3 +223,7 @@ and every figure elsewhere links back to it.
   Firestore, which is also how the AI-disabled degradation path is verified deterministically in CI.
 - **Server recomputes every number.** The client may compute for instant UX, but `POST /api/activities`
   and `POST /api/simulate` recompute authoritatively from the engine and ignore any client value.
+
+## License
+
+[MIT](LICENSE) © 2026 Vedant.
