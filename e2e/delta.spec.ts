@@ -29,7 +29,7 @@ test('demo sign-in → log manually → see footprint, with AI degradation', asy
 
   // Manual entry still works end to end (default category is Transport).
   await page.getByRole('button', { name: /\+ Petrol car/i }).first().click();
-  await expect(page.getByText(/Logged Petrol car/i)).toBeVisible();
+  await expect(page.getByText(/Logged Petrol car/i).first()).toBeVisible();
 
   // Footprint reflects the logged activity.
   await page.getByRole('navigation').getByRole('link', { name: 'Dashboard', exact: true }).click();
