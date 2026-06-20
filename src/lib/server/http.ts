@@ -57,7 +57,13 @@ export function errorResponse(
   );
 }
 
-/** Parses a request body against a schema, throwing a 400 ApiError on failure. */
+/**
+ * Parses and validates a JSON request body against a Zod schema.
+ * @param request - The incoming request.
+ * @param schema - The Zod schema to validate against.
+ * @returns The parsed, typed body (`z.output` of the schema).
+ * @throws ApiError(400) with field-level details if the body is not valid JSON or fails validation.
+ */
 export async function parseJson<S extends ZodTypeAny>(
   request: Request,
   schema: S,

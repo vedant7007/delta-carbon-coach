@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
+import { simulate, periodStartIso } from '@/lib/engine';
+import { simulateInputSchema, periodSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
-import { simulateInputSchema, periodSchema } from '@/lib/schemas';
-import { simulate, periodStartIso } from '@/lib/engine';
 import { listActivitiesSince } from '@/lib/server/repository/activityRepository';
 
 export const dynamic = 'force-dynamic';

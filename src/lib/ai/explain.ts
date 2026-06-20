@@ -1,6 +1,7 @@
 import { roundForDisplay } from '@/lib/engine';
 import type { AiExplainInput } from '@/lib/schemas';
 import { generateText } from './client';
+import { AI_REQUEST_TIMEOUT_MS, MAX_PHRASING_CHARS } from './constants';
 
 /**
  * Friendly phrasing of an ALREADY-COMPUTED insight. The number is fixed by the
@@ -25,24 +26,20 @@ export function buildExplainPrompt(insight: AiExplainInput['insight']): string {
 
 /** Returns AI phrasing, or throws so the caller can use the fallback template. */
 export async function explainInsight(insight: AiExplainInput['insight']): Promise<string> {
-  const raw = await generateText(buildExplainPrompt(insight), 4000);
+  const raw = await generateText(buildExplainPrompt(insight), AI_REQUEST_TIMEOUT_MS);
   const cleaned = raw
     .replace(/^```(?:json)?/i, '')
     .replace(/```$/i, '')
     .trim();
   const json: unknown = JSON.parse(cleaned);
-  if (
-    typeof json === 'object' &&
-    json !== null &&
-    'text' in json &&
-    typeof (json as { text: unknown }).text === 'string'
-  ) {
-    const text = (json as { text: string }).text.trim();
-    if (text.length > 0 && text.length <= 400) return text;
+  if (typeof json === 'object' && json !== null && 'text' in json && typeof json.text === 'string') {
+    const text = json.text.trim();
+    if (text.length > 0 && text.length <= MAX_PHRASING_CHARS) return text;
   }
   throw new Error('AI returned an unusable phrasing');
 }
 
 function lowerFirst(s: string): string {
-  return s.length > 0 ? s[0]!.toLowerCase() + s.slice(1) : s;
+  if (s.length === 0) return s;
+  return s.charAt(0).toLowerCase() + s.slice(1);
 }

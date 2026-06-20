@@ -42,9 +42,6 @@ export const memory = {
   remove(uid: string, id: string): boolean {
     return userActivities(uid).delete(id);
   },
-  getProfile(uid: string): UserProfile | null {
-    return profiles.get(uid) ?? null;
-  },
   upsertProfile(profile: UserProfile): void {
     profiles.set(profile.uid, { ...profiles.get(profile.uid), ...profile });
   },

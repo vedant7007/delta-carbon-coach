@@ -1,15 +1,6 @@
 'use client';
 
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -18,6 +9,15 @@ import {
   onAuthStateChanged,
   type User,
 } from 'firebase/auth';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { getFirebaseAuth, isFirebaseConfigured } from '@/lib/firebaseClient';
 
 export interface AuthUser {
@@ -45,6 +45,23 @@ function toAuthUser(u: User): AuthUser {
   return { uid: u.uid, email: u.email, displayName: u.displayName };
 }
 
+/** Validates a value parsed from localStorage is a well-formed demo user. */
+function isAuthUser(value: unknown): value is AuthUser {
+  return typeof value === 'object' && value !== null && 'uid' in value && typeof value.uid === 'string';
+}
+
+/** Reads the persisted demo user from localStorage, or null if absent/corrupt. */
+function readDemoUser(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem(DEMO_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return isAuthUser(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const demoMode = !isFirebaseConfigured();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -52,12 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (demoMode) {
-      try {
-        const raw = localStorage.getItem(DEMO_KEY);
-        if (raw) setUser(JSON.parse(raw) as AuthUser);
-      } catch {
-        /* ignore corrupt storage */
-      }
+      setUser(readDemoUser());
       setLoading(false);
       return;
     }

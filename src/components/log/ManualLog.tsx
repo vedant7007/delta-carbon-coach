@@ -1,15 +1,28 @@
 'use client';
 
 import { forwardRef, useMemo, useState } from 'react';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import {
   CATEGORIES,
   factorsByCategory,
   getFactor,
   roundForDisplay,
   type Category,
+  type EmissionFactor,
 } from '@/lib/engine';
+
+/** A factor guaranteed to carry a default serving — eligible for a one-tap chip. */
+type ChipFactor = EmissionFactor & { defaultServing: number };
+
+function hasDefaultServing(factor: EmissionFactor): factor is ChipFactor {
+  return typeof factor.defaultServing === 'number';
+}
+
+const CATEGORY_VALUES: readonly string[] = CATEGORIES;
+function isCategory(value: string): value is Category {
+  return CATEGORY_VALUES.includes(value);
+}
 
 const CATEGORY_LABELS: Record<Category, string> = {
   transport: 'Transport',
@@ -43,7 +56,7 @@ export const ManualLog = forwardRef<HTMLSelectElement, Props>(function ManualLog
     setAmount('');
   }
 
-  const chipFactors = factors.filter((f) => f.defaultServing);
+  const chipFactors = factors.filter(hasDefaultServing);
 
   return (
     <Card>
@@ -55,7 +68,7 @@ export const ManualLog = forwardRef<HTMLSelectElement, Props>(function ManualLog
           <button
             key={f.id}
             type="button"
-            onClick={() => void onAdd(f.id, f.defaultServing!)}
+            onClick={() => void onAdd(f.id, f.defaultServing)}
             className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1 text-sm hover:border-[var(--color-primary)]"
           >
             + {f.label}{' '}
@@ -75,7 +88,9 @@ export const ManualLog = forwardRef<HTMLSelectElement, Props>(function ManualLog
             id="cat"
             ref={ref}
             value={category}
-            onChange={(e) => onCategoryChange(e.target.value as Category)}
+            onChange={(e) => {
+              if (isCategory(e.target.value)) onCategoryChange(e.target.value);
+            }}
             className="mt-1 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
           >
             {CATEGORIES.map((c) => (

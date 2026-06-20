@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/cn';
 
 const NAV = [
   { href: '/dashboard', label: 'Dashboard' },

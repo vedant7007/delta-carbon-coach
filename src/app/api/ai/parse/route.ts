@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
+import { isAiEnabled } from '@/lib/ai/client';
+import { parseActivitiesFromText } from '@/lib/ai/parse';
+import { aiParseInputSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
 import { enforceRateLimit } from '@/lib/server/rateLimit';
-import { aiParseInputSchema } from '@/lib/schemas';
-import { isAiEnabled } from '@/lib/ai/client';
-import { parseActivitiesFromText } from '@/lib/ai/parse';
 
 export const dynamic = 'force-dynamic';
 

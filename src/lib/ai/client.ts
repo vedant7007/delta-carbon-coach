@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AI_REQUEST_TIMEOUT_MS, GEMINI_DEFAULT_MODEL } from './constants';
 
 /**
  * Server-only Gemini access. The key lives in Secret Manager and is never
@@ -6,14 +7,24 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
  * is absent, callers fall back to deterministic behaviour.
  */
 
+/** True only when AI is not force-disabled AND an API key is configured. */
 export function isAiEnabled(): boolean {
   return process.env.AI_DISABLED !== '1' && Boolean(process.env.GEMINI_API_KEY);
 }
 
-const MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
+const MODEL = process.env.GEMINI_MODEL ?? GEMINI_DEFAULT_MODEL;
 
-/** Runs a prompt with a hard timeout. Resolves to the raw text, or throws. */
-export async function generateText(prompt: string, timeoutMs = 4000): Promise<string> {
+/**
+ * Runs a prompt against Gemini with a hard timeout.
+ * @param prompt - The fully-formed prompt text.
+ * @param timeoutMs - Abort budget in milliseconds (defaults to {@link AI_REQUEST_TIMEOUT_MS}).
+ * @returns The model's raw text response.
+ * @throws If AI is not configured, the request errors, or it exceeds the timeout.
+ */
+export async function generateText(
+  prompt: string,
+  timeoutMs: number = AI_REQUEST_TIMEOUT_MS,
+): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('AI not configured');
 

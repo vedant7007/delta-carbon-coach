@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
+import { isAiEnabled } from '@/lib/ai/client';
+import { explainInsight, fallbackPhrasing } from '@/lib/ai/explain';
+import { aiExplainInputSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
 import { enforceRateLimit } from '@/lib/server/rateLimit';
-import { aiExplainInputSchema } from '@/lib/schemas';
-import { isAiEnabled } from '@/lib/ai/client';
-import { explainInsight, fallbackPhrasing } from '@/lib/ai/explain';
 
 export const dynamic = 'force-dynamic';
 

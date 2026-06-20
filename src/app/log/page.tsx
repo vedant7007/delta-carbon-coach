@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
-import { Card } from '@/components/ui/Card';
+import { ManualLog } from '@/components/log/ManualLog';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { useApi, ApiClientError } from '@/lib/apiClient';
-import { getFactor, roundForDisplay } from '@/lib/engine';
-import { ManualLog } from '@/components/log/ManualLog';
 import type { AiParseResponse, StoredActivity } from '@/lib/dto';
+import { getFactor, roundForDisplay } from '@/lib/engine';
 
 export default function LogPage() {
   return (

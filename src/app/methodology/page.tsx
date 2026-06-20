@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
+  CATEGORIES,
   FACTORS,
   REGIONAL_AVERAGES,
   factorsByCategory,
@@ -28,7 +29,7 @@ const UNCERTAINTY_COPY: Record<Uncertainty, string> = {
 };
 
 export default function MethodologyPage() {
-  const categories = Object.keys(CATEGORY_LABELS) as Category[];
+  const categories = CATEGORIES;
 
   return (
     <div className="min-h-dvh">

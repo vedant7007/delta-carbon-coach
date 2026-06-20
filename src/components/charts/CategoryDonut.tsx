@@ -1,8 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import type { Category } from '@/lib/engine';
-import { roundForDisplay } from '@/lib/engine';
+import { CATEGORIES, roundForDisplay, type Category } from '@/lib/engine';
 
 const LABELS: Record<Category, string> = {
   transport: 'Transport',
@@ -18,9 +17,11 @@ const COLORS: Record<Category, string> = {
 };
 
 export default function CategoryDonut({ byCategory }: { byCategory: Record<Category, number> }) {
-  const data = (Object.keys(LABELS) as Category[])
-    .map((c) => ({ category: c, label: LABELS[c], value: byCategory[c] }))
-    .filter((d) => d.value > 0);
+  const data = CATEGORIES.map((c) => ({
+    category: c,
+    label: LABELS[c],
+    value: byCategory[c],
+  })).filter((d) => d.value > 0);
 
   const total = data.reduce((s, d) => s + d.value, 0);
 

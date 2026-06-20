@@ -1,14 +1,15 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Slider } from '@/components/ui/Slider';
+import { Card } from '@/components/ui/Card';
 import { CountUp } from '@/components/ui/CountUp';
+import { Slider } from '@/components/ui/Slider';
 import { useApi } from '@/lib/apiClient';
+import type { StoredActivity } from '@/lib/dto';
 import {
   SWAP_CATALOG,
   getFactor,
@@ -18,7 +19,6 @@ import {
   type Activity,
   type Adjustment,
 } from '@/lib/engine';
-import type { StoredActivity } from '@/lib/dto';
 
 export default function SimulatePage() {
   return (

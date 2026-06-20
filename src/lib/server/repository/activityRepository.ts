@@ -1,6 +1,6 @@
+import type { Activity } from '@/lib/engine';
 import { adminDb } from '../firebaseAdmin';
 import { memory, shouldUseMemoryStore } from './memoryStore';
-import type { Activity } from '@/lib/engine';
 
 /**
  * Data access for activities. The ONLY place Firestore reads/writes for the

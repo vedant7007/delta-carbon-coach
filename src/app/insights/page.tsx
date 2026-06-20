@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { useApi } from '@/lib/apiClient';
-import { roundForDisplay, type RankedAction } from '@/lib/engine';
 import type { AiExplainResponse, InsightsResponse } from '@/lib/dto';
+import { roundForDisplay, type RankedAction } from '@/lib/engine';
 
 export default function InsightsPage() {
   return (

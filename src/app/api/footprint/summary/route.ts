@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { periodSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { runGuarded, ApiError } from '@/lib/server/http';
-import { periodSchema } from '@/lib/schemas';
 import { getSummary } from '@/lib/server/services/footprintService';
 
 export const dynamic = 'force-dynamic';

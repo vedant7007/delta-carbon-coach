@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { onboardingSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
-import { onboardingSchema } from '@/lib/schemas';
 import { seedBaseline } from '@/lib/server/services/onboardingService';
 
 export const dynamic = 'force-dynamic';

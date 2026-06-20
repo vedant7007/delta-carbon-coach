@@ -27,8 +27,14 @@ export interface FootprintSummary {
 }
 
 /**
- * Authoritative footprint summary. Emissions are recomputed from the engine for
- * every activity, so the summary can never drift from the factor dataset.
+ * Builds the authoritative footprint summary. Emissions are recomputed from the
+ * engine for every activity, so the summary can never drift from the dataset.
+ *
+ * @param uid - The owning user's id.
+ * @param period - The reporting window.
+ * @param now - Injected clock defining the window and trend buckets.
+ * @param region - Region for the per-capita comparison (defaults to India).
+ * @returns Total, per-category breakdown, daily trend, and the regional average (all kg CO₂e).
  */
 export async function getSummary(
   uid: string,
@@ -45,8 +51,10 @@ export async function getSummary(
   const buckets = new Map<string, number>(dateKeysForPeriod(period, now).map((k) => [k, 0]));
   for (const activity of activities) {
     const key = dateKey(activity.loggedAt);
-    if (buckets.has(key)) {
-      buckets.set(key, buckets.get(key)! + computeActivityEmissions(activity).kgCO2e);
+    const current = buckets.get(key);
+    // Only fold in activities that fall inside the window's day buckets.
+    if (current !== undefined) {
+      buckets.set(key, current + computeActivityEmissions(activity).kgCO2e);
     }
   }
   const trend: TrendPoint[] = [...buckets.entries()].map(([date, kgCO2e]) => ({ date, kgCO2e }));
@@ -60,7 +68,13 @@ export async function getSummary(
   };
 }
 
-/** Ranked, personalised actions from the user's own logged data. */
+/**
+ * Ranked, personalised actions from the user's own logged data.
+ * @param uid - The owning user's id.
+ * @param period - The window of activity to analyse.
+ * @param now - Injected clock defining the window.
+ * @returns The highest-leverage actions, sorted by annual kg CO₂e saved.
+ */
 export async function getInsights(
   uid: string,
   period: Period,

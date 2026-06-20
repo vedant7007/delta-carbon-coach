@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { activityInputSchema, periodSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded, ApiError } from '@/lib/server/http';
-import { activityInputSchema, periodSchema } from '@/lib/schemas';
 import { logActivity, listActivities } from '@/lib/server/services/activityService';
 
 export const dynamic = 'force-dynamic';

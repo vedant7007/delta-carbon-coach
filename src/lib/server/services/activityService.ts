@@ -1,16 +1,26 @@
 import { computeActivityEmissions, periodStartIso, type Period } from '@/lib/engine';
 import type { ActivityInput } from '@/lib/schemas';
+import { ApiError } from '../http';
 import {
   createActivity,
   deleteActivity,
   listActivitiesSince,
   type StoredActivity,
 } from '../repository/activityRepository';
-import { ApiError } from '../http';
 
 /**
- * Business logic for activities. The server ALWAYS recomputes kg CO₂e from the
- * engine — the client number is never trusted or persisted.
+ * Service layer for activities. Business logic only; persistence is delegated to
+ * the repository and all math to the engine. The server ALWAYS recomputes kg
+ * CO₂e here — the client's number is never trusted or persisted.
+ */
+
+/**
+ * Validates-and-persists an activity, computing its authoritative emissions.
+ * @param uid - The owning user's id.
+ * @param input - The validated `{ factorId, amount }` (amount in the factor's unit).
+ * @param source - Whether the entry came from manual input or AI quick-log.
+ * @param now - Injected clock for the `loggedAt` timestamp (keeps callers testable).
+ * @returns The stored activity, including the server-computed `kgCO2e`.
  */
 export async function logActivity(
   uid: string,
@@ -28,6 +38,13 @@ export async function logActivity(
   });
 }
 
+/**
+ * Lists a user's activities within the given period.
+ * @param uid - The owning user's id.
+ * @param period - The window to list.
+ * @param now - Injected clock defining the window's end.
+ * @returns The activities logged within the window, newest first.
+ */
 export async function listActivities(
   uid: string,
   period: Period,
@@ -36,6 +53,12 @@ export async function listActivities(
   return listActivitiesSince(uid, periodStartIso(period, now));
 }
 
+/**
+ * Deletes an owned activity.
+ * @param uid - The owning user's id (ownership is enforced by the repository path).
+ * @param id - The activity id to delete.
+ * @throws ApiError(404) if the activity does not exist.
+ */
 export async function removeActivity(uid: string, id: string): Promise<void> {
   const deleted = await deleteActivity(uid, id);
   if (!deleted) {

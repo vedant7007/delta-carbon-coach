@@ -1,7 +1,7 @@
 'use client';
 
-import type { Period } from '@/lib/engine';
 import { cn } from '@/lib/cn';
+import type { Period } from '@/lib/engine';
 
 const OPTIONS: { value: Period; label: string }[] = [
   { value: 'day', label: 'Day' },

@@ -1,5 +1,6 @@
 'use client';
 
+import * as ToastPrimitive from '@radix-ui/react-toast';
 import {
   createContext,
   useCallback,
@@ -8,7 +9,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import * as ToastPrimitive from '@radix-ui/react-toast';
 import { cn } from '@/lib/cn';
 
 interface ToastItem {

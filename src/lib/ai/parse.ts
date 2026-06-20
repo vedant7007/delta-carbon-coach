@@ -13,6 +13,11 @@ function factorMenu(): string {
   return FACTORS.map((f) => `- ${f.id} (${f.label}, unit: ${f.unit})`).join('\n');
 }
 
+/**
+ * Builds the strict extraction prompt, embedding the allowed factor list.
+ * @param text - The user's free-text description of their day.
+ * @returns The full prompt instructing the model to emit only `{ factorId, amount }` JSON.
+ */
 export function buildParsePrompt(text: string): string {
   return [
     'You convert a short description of someone\'s day into structured activity data.',
@@ -29,7 +34,13 @@ export function buildParsePrompt(text: string): string {
   ].join('\n');
 }
 
-/** Strips code fences and parses+validates the model output. Throws on mismatch. */
+/**
+ * Strips code fences, parses, and strictly validates the model output against
+ * the known-factor allow-list — the anti-hallucination guard.
+ * @param raw - The model's raw text response.
+ * @returns The validated activities (`factorId` is guaranteed to be a known factor).
+ * @throws If the text isn't valid JSON or contains an unknown factor / bad amount.
+ */
 export function extractAndValidate(raw: string): ParsedActivity[] {
   const cleaned = raw
     .replace(/^```(?:json)?/i, '')
@@ -40,7 +51,12 @@ export function extractAndValidate(raw: string): ParsedActivity[] {
   return result.activities;
 }
 
-/** Full pipeline: prompt the model, extract, validate. Throws on any failure. */
+/**
+ * Full pipeline: prompt the model, extract, validate.
+ * @param text - The user's free-text description.
+ * @returns The validated parsed activities for the user to confirm before saving.
+ * @throws If the model errors/times out or returns unusable output (caller falls back to manual).
+ */
 export async function parseActivitiesFromText(text: string): Promise<ParsedActivity[]> {
   const raw = await generateText(buildParsePrompt(text));
   return extractAndValidate(raw);
