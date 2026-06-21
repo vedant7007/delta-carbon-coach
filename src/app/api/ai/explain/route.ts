@@ -4,6 +4,7 @@ import { explainInsight, fallbackPhrasing } from '@/lib/ai/explain';
 import { aiExplainInputSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
+import { describeError, logger } from '@/lib/server/logger';
 import { enforceRateLimit } from '@/lib/server/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const text = await explainInsight(insight);
       return NextResponse.json({ degraded: false, text });
     } catch (err) {
-      console.error('AI explain failed, using template:', err);
+      logger.error('AI explain failed, using template', { error: describeError(err) });
       return NextResponse.json({ degraded: true, text: fallbackPhrasing(insight) });
     }
   });

@@ -1,4 +1,5 @@
 import { computeActivityEmissions } from './compute';
+import { InvalidValueError } from './errors';
 import { getFactor } from './factors';
 import type { Activity, Adjustment, SimulationResult } from './types';
 
@@ -18,7 +19,7 @@ const PERCENT = 100;
 function adjustedEmissions(activity: Activity, adj: Adjustment): number {
   const scale = adj.scale ?? NO_CHANGE_SCALE;
   if (!Number.isFinite(scale) || scale < 0) {
-    throw new Error(`Adjustment scale must be a non-negative number, got ${scale}`);
+    throw new InvalidValueError(`Adjustment scale must be a non-negative number, got ${scale}`);
   }
 
   const keptAmount = activity.amount * scale;

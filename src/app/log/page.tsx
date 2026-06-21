@@ -1,14 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { ManualLog } from '@/components/log/ManualLog';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
-import { useApi, ApiClientError } from '@/lib/apiClient';
-import type { AiParseResponse, StoredActivity } from '@/lib/dto';
+import { useApi } from '@/lib/apiClient';
+import type { AiParseResponse } from '@/lib/dto';
 import { getFactor, roundForDisplay } from '@/lib/engine';
+import { useActivityLog } from '@/lib/hooks/useActivityLog';
 
 export default function LogPage() {
   return (
@@ -19,54 +20,9 @@ export default function LogPage() {
 }
 
 function LogContent() {
-  const api = useApi();
   const { notify } = useToast();
-  const [recent, setRecent] = useState<StoredActivity[]>([]);
+  const { recent, addActivity, removeActivity } = useActivityLog();
   const manualRef = useRef<HTMLSelectElement>(null);
-
-  const loadRecent = useCallback(async () => {
-    try {
-      const res = await api<{ activities: StoredActivity[] }>('/api/activities?period=week');
-      setRecent(res.activities);
-    } catch {
-      /* non-fatal: list just stays as-is */
-    }
-  }, [api]);
-
-  useEffect(() => {
-    void loadRecent();
-  }, [loadRecent]);
-
-  const addActivity = useCallback(
-    async (factorId: string, amount: number) => {
-      try {
-        const res = await api<{ activity: StoredActivity }>('/api/activities', {
-          method: 'POST',
-          body: JSON.stringify({ factorId, amount }),
-        });
-        setRecent((prev) => [res.activity, ...prev]);
-        notify(`Logged ${getFactor(factorId).label}`, 'success');
-      } catch (err) {
-        const msg = err instanceof ApiClientError ? err.message : 'Could not save — try again.';
-        notify(msg, 'warning');
-      }
-    },
-    [api, notify],
-  );
-
-  const removeActivity = useCallback(
-    async (id: string) => {
-      const prev = recent;
-      setRecent((r) => r.filter((a) => a.id !== id)); // optimistic
-      try {
-        await api(`/api/activities/${id}`, { method: 'DELETE' });
-      } catch {
-        setRecent(prev); // rollback
-        notify('Could not delete — restored.', 'warning');
-      }
-    },
-    [api, notify, recent],
-  );
 
   return (
     <div className="space-y-6">

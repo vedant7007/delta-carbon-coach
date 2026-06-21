@@ -1,13 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { useApi } from '@/lib/apiClient';
-import type { AiExplainResponse, InsightsResponse } from '@/lib/dto';
-import { roundForDisplay, type RankedAction } from '@/lib/engine';
+import { roundForDisplay } from '@/lib/engine';
+import { useInsights } from '@/lib/hooks/useInsights';
 
 export default function InsightsPage() {
   return (
@@ -18,39 +16,7 @@ export default function InsightsPage() {
 }
 
 function InsightsContent() {
-  const api = useApi();
-  const [actions, setActions] = useState<RankedAction[] | null>(null);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [phrasing, setPhrasing] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await api<InsightsResponse>('/api/insights?period=week');
-        setActions(res.actions);
-        setStatus('ready');
-        // F8: ask for warm phrasing of the top insight (degrades to a template server-side).
-        if (res.actions[0]) {
-          try {
-            const explained = await api<AiExplainResponse>('/api/ai/explain', {
-              method: 'POST',
-              body: JSON.stringify({
-                insight: {
-                  title: res.actions[0].title,
-                  annualKgSaved: res.actions[0].annualKgSaved,
-                },
-              }),
-            });
-            setPhrasing(explained.text);
-          } catch {
-            /* explain endpoint already self-heals; ignore here */
-          }
-        }
-      } catch {
-        setStatus('error');
-      }
-    })();
-  }, [api]);
+  const { actions, status, phrasing } = useInsights();
 
   return (
     <div className="space-y-6">

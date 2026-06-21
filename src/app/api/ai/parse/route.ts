@@ -4,6 +4,7 @@ import { parseActivitiesFromText } from '@/lib/ai/parse';
 import { aiParseInputSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
+import { describeError, logger } from '@/lib/server/logger';
 import { enforceRateLimit } from '@/lib/server/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +37,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const activities = await parseActivitiesFromText(text);
       return NextResponse.json({ degraded: false, activities });
     } catch (err) {
-      console.error('AI parse failed, falling back to manual:', err);
+      logger.error('AI parse failed, falling back to manual', { error: describeError(err) });
       return NextResponse.json({
         degraded: true,
         activities: [],

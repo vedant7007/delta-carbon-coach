@@ -1,7 +1,7 @@
+import { assertNever } from '@/lib/assert';
 import { computeActivityEmissions, getFactor } from '@/lib/engine';
 import type { ActivityInput, OnboardingInput } from '@/lib/schemas';
-import { createActivity } from '../repository/activityRepository';
-import { upsertUserProfile } from '../repository/userRepository';
+import { activityRepository, userRepository } from '../repository';
 
 /** Representative defaults used to seed a baseline when an answer is skipped. */
 const DAYS_PER_MONTH = 30;
@@ -45,16 +45,18 @@ export function buildSeedActivities(input: OnboardingInput): ActivityInput[] {
 }
 
 function dietToFactor(diet: OnboardingInput['diet']): string {
-  switch (diet) {
+  const value = diet ?? 'average';
+  switch (value) {
     case 'meat-heavy':
       return 'food.beef';
+    case 'average':
+      return 'food.chicken';
     case 'vegetarian':
       return 'food.cheese';
     case 'vegan':
       return 'food.lentils';
-    case 'average':
     default:
-      return 'food.chicken';
+      return assertNever(value);
   }
 }
 
@@ -79,7 +81,7 @@ export async function seedBaseline(
   const seeds = buildSeedActivities(input);
   await Promise.all(
     seeds.map((seed) =>
-      createActivity(uid, {
+      activityRepository.create(uid, {
         factorId: seed.factorId,
         amount: seed.amount,
         kgCO2e: computeActivityEmissions(seed).kgCO2e,
@@ -89,7 +91,7 @@ export async function seedBaseline(
     ),
   );
 
-  await upsertUserProfile({
+  await userRepository.upsert({
     uid,
     email,
     onboarding: input,

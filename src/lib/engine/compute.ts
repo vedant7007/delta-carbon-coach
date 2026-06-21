@@ -1,3 +1,4 @@
+import { FactorMismatchError, InvalidValueError } from './errors';
 import { getFactor } from './factors';
 import type {
   Activity,
@@ -40,15 +41,13 @@ export function computeActivityEmissions(
   const resolved = factor ?? getFactor(activity.factorId);
 
   if (factor && factor.id !== activity.factorId) {
-    throw new Error(
-      `Factor mismatch: activity references "${activity.factorId}" but factor is "${factor.id}"`,
-    );
+    throw new FactorMismatchError(activity.factorId, factor.id);
   }
   if (!Number.isFinite(activity.amount)) {
-    throw new Error(`Activity amount must be a finite number, got ${activity.amount}`);
+    throw new InvalidValueError(`Activity amount must be a finite number, got ${activity.amount}`);
   }
   if (activity.amount < 0) {
-    throw new Error(`Activity amount cannot be negative, got ${activity.amount}`);
+    throw new InvalidValueError(`Activity amount cannot be negative, got ${activity.amount}`);
   }
 
   return {
@@ -100,7 +99,7 @@ export function sumTotal(activities: Activity[]): number {
  */
 export function projectAnnual(periodTotalKg: number, period: Period): number {
   if (periodTotalKg < 0) {
-    throw new Error(`Period total cannot be negative, got ${periodTotalKg}`);
+    throw new InvalidValueError(`Period total cannot be negative, got ${periodTotalKg}`);
   }
   return (periodTotalKg / PERIOD_DAYS[period]) * DAYS_PER_YEAR;
 }

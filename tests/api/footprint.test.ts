@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@/lib/server/auth', () => ({ requireUser: vi.fn() }));
-vi.mock('@/lib/server/repository/activityRepository', () => ({
-  listActivitiesSince: vi.fn(),
+vi.mock('@/lib/server/repository', () => ({
+  activityRepository: { listSince: vi.fn() },
 }));
 
 import { requireUser } from '@/lib/server/auth';
-import { listActivitiesSince } from '@/lib/server/repository/activityRepository';
+import { activityRepository, type StoredActivity } from '@/lib/server/repository';
 import { GET as summaryGET } from '@/app/api/footprint/summary/route';
 import { GET as insightsGET } from '@/app/api/insights/route';
 import { POST as simulatePOST } from '@/app/api/simulate/route';
 import { ApiError } from '@/lib/server/http';
-import type { StoredActivity } from '@/lib/server/repository/activityRepository';
+
+const listSince = vi.mocked(activityRepository.listSince);
 
 const now = new Date('2026-06-19T12:00:00.000Z');
 
@@ -41,7 +42,7 @@ beforeEach(() => {
 
 describe('GET /api/footprint/summary', () => {
   it('returns totals, breakdown, trend and a regional average', async () => {
-    vi.mocked(listActivitiesSince).mockResolvedValue([
+    listSince.mockResolvedValue([
       act('transport.car.petrol', 100, 'a'),
       act('food.beef', 1, 'b'),
     ]);
@@ -72,7 +73,7 @@ describe('GET /api/footprint/summary', () => {
 
 describe('GET /api/insights', () => {
   it('ranks actions from the logged data', async () => {
-    vi.mocked(listActivitiesSince).mockResolvedValue([act('food.beef', 1, 'a')]);
+    listSince.mockResolvedValue([act('food.beef', 1, 'a')]);
     const res = await insightsGET(authReq('http://localhost/api/insights?period=week'));
     expect(res.status).toBe(200);
     const json = await res.json();
@@ -81,7 +82,7 @@ describe('GET /api/insights', () => {
   });
 
   it('returns an empty list with no data', async () => {
-    vi.mocked(listActivitiesSince).mockResolvedValue([]);
+    listSince.mockResolvedValue([]);
     const res = await insightsGET(authReq('http://localhost/api/insights'));
     const json = await res.json();
     expect(json.actions).toEqual([]);
@@ -90,7 +91,7 @@ describe('GET /api/insights', () => {
 
 describe('POST /api/simulate', () => {
   it('authoritatively recomputes against the user data', async () => {
-    vi.mocked(listActivitiesSince).mockResolvedValue([act('transport.car.petrol', 100, 'a')]);
+    listSince.mockResolvedValue([act('transport.car.petrol', 100, 'a')]);
     const res = await simulatePOST(
       authReq('http://localhost/api/simulate?period=week', {
         adjustments: [{ factorId: 'transport.car.petrol', scale: 0 }],

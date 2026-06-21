@@ -8,17 +8,15 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { CountUp } from '@/components/ui/CountUp';
 import { Slider } from '@/components/ui/Slider';
-import { useApi } from '@/lib/apiClient';
-import type { StoredActivity } from '@/lib/dto';
 import {
   SWAP_CATALOG,
   getFactor,
   projectAnnual,
   roundForDisplay,
   simulate,
-  type Activity,
   type Adjustment,
 } from '@/lib/engine';
+import { useSimulationBaseline } from '@/lib/hooks/useSimulationBaseline';
 
 export default function SimulatePage() {
   return (
@@ -31,32 +29,11 @@ export default function SimulatePage() {
 }
 
 function SimulateContent() {
-  const api = useApi();
   const params = useSearchParams();
-  const [baseline, setBaseline] = useState<Activity[]>([]);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const { baseline, status } = useSimulationBaseline();
   // scale[factorId] = 0..100 (% of current kept)
   const [scales, setScales] = useState<Record<string, number>>({});
   const [swaps, setSwaps] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await api<{ activities: StoredActivity[] }>('/api/activities?period=week');
-        // Collapse to one entry per factor with summed amount.
-        const byFactor = new Map<string, Activity>();
-        for (const a of res.activities) {
-          const existing = byFactor.get(a.factorId);
-          if (existing) existing.amount += a.amount;
-          else byFactor.set(a.factorId, { ...a });
-        }
-        setBaseline([...byFactor.values()]);
-        setStatus('ready');
-      } catch {
-        setStatus('error');
-      }
-    })();
-  }, [api]);
 
   // Hydrate from ?action=<swapId> ("Simulate this" from insights).
   useEffect(() => {

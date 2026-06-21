@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { simulate, periodStartIso } from '@/lib/engine';
 import { simulateInputSchema, periodSchema } from '@/lib/schemas';
 import { requireUser } from '@/lib/server/auth';
 import { parseJson, runGuarded } from '@/lib/server/http';
-import { listActivitiesSince } from '@/lib/server/repository/activityRepository';
+import { getSimulation } from '@/lib/server/services/footprintService';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +17,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     const { adjustments } = await parseJson(request, simulateInputSchema);
 
     const url = new URL(request.url);
-    const periodParsed = periodSchema.safeParse(url.searchParams.get('period') ?? 'week');
-    const period = periodParsed.success ? periodParsed.data : 'week';
+    const period = periodSchema.safeParse(url.searchParams.get('period') ?? 'week');
 
-    const baseline = await listActivitiesSince(user.uid, periodStartIso(period, new Date()));
-    const result = simulate(baseline, adjustments);
-
+    const result = await getSimulation(
+      user.uid,
+      adjustments,
+      period.success ? period.data : 'week',
+      new Date(),
+    );
     return NextResponse.json(result);
   });
 }

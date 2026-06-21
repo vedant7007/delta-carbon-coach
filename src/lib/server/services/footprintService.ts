@@ -5,13 +5,16 @@ import {
   periodStartIso,
   rankMarginalImpact,
   regionalAverageForPeriod,
+  simulate,
   sumByCategory,
   sumTotal,
+  type Adjustment,
   type Category,
   type Period,
   type RankedAction,
+  type SimulationResult,
 } from '@/lib/engine';
-import { listActivitiesSince } from '../repository/activityRepository';
+import { activityRepository } from '../repository';
 
 export interface TrendPoint {
   date: string;
@@ -42,7 +45,7 @@ export async function getSummary(
   now: Date,
   region: 'IN' | 'GLOBAL' = 'IN',
 ): Promise<FootprintSummary> {
-  const activities = await listActivitiesSince(uid, periodStartIso(period, now));
+  const activities = await activityRepository.listSince(uid, periodStartIso(period, now));
 
   const total = sumTotal(activities);
   const byCategory = sumByCategory(activities);
@@ -80,6 +83,26 @@ export async function getInsights(
   period: Period,
   now: Date,
 ): Promise<RankedAction[]> {
-  const activities = await listActivitiesSince(uid, periodStartIso(period, now));
+  const activities = await activityRepository.listSince(uid, periodStartIso(period, now));
   return rankMarginalImpact(activities, period);
+}
+
+/**
+ * Authoritatively recomputes a what-if scenario against the user's real data.
+ * Keeps the simulate route on the route → service → repository/engine path.
+ *
+ * @param uid - The owning user's id.
+ * @param adjustments - The scenario adjustments to apply.
+ * @param period - The window of baseline activity to simulate against.
+ * @param now - Injected clock defining the window.
+ * @returns The before/after totals and delta (kg CO₂e).
+ */
+export async function getSimulation(
+  uid: string,
+  adjustments: Adjustment[],
+  period: Period,
+  now: Date,
+): Promise<SimulationResult> {
+  const baseline = await activityRepository.listSince(uid, periodStartIso(period, now));
+  return simulate(baseline, adjustments);
 }

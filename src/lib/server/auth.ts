@@ -1,5 +1,7 @@
+import { getServerConfig } from '@/lib/config/env';
 import { adminAuth } from './firebaseAdmin';
 import { ApiError } from './http';
+import { describeError, logger } from './logger';
 
 export interface AuthedUser {
   uid: string;
@@ -26,7 +28,7 @@ export async function requireUser(request: Request): Promise<AuthedUser> {
     throw new ApiError('unauthorized', 'Missing or malformed Authorization header');
   }
 
-  if (process.env.DELTA_E2E === '1') {
+  if (getServerConfig().isE2E) {
     // Stub auth for the AI-disabled E2E walkthrough.
     return { uid: `e2e-${token.slice(0, E2E_UID_TOKEN_CHARS)}`, email: 'e2e@delta.test' };
   }
@@ -37,7 +39,7 @@ export async function requireUser(request: Request): Promise<AuthedUser> {
   } catch (err) {
     // Log the underlying reason server-side (never leaked to the client) so
     // auth failures are diagnosable.
-    console.error('ID token verification failed:', err instanceof Error ? err.message : err);
+    logger.error('ID token verification failed', { reason: describeError(err) });
     throw new ApiError('unauthorized', 'Invalid or expired session token');
   }
 }

@@ -22,11 +22,14 @@ export default defineConfig({
       exclude: [
         // Thin I/O adapters / SDK wrappers — exercised via mocks, not unit-covered.
         'src/lib/server/firebaseAdmin.ts',
-        'src/lib/server/repository/**',
+        'src/lib/server/repository/firestore.ts',
         'src/lib/ai/client.ts',
         'src/lib/firebaseClient.ts',
-        // Pure re-export barrel.
+        // Client-side React glue (hooks), like components — verified by E2E, not unit-covered.
+        'src/lib/hooks/**',
+        // Pure re-export barrels.
         'src/lib/engine/index.ts',
+        'src/lib/server/repository/index.ts',
         '**/*.d.ts',
         '**/types.ts',
       ],

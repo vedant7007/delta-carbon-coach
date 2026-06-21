@@ -1,12 +1,7 @@
 import { computeActivityEmissions, periodStartIso, type Period } from '@/lib/engine';
 import type { ActivityInput } from '@/lib/schemas';
 import { ApiError } from '../http';
-import {
-  createActivity,
-  deleteActivity,
-  listActivitiesSince,
-  type StoredActivity,
-} from '../repository/activityRepository';
+import { activityRepository, type StoredActivity } from '../repository';
 
 /**
  * Service layer for activities. Business logic only; persistence is delegated to
@@ -29,7 +24,7 @@ export async function logActivity(
   now: Date,
 ): Promise<StoredActivity> {
   const { kgCO2e } = computeActivityEmissions(input);
-  return createActivity(uid, {
+  return activityRepository.create(uid, {
     factorId: input.factorId,
     amount: input.amount,
     kgCO2e,
@@ -50,7 +45,7 @@ export async function listActivities(
   period: Period,
   now: Date,
 ): Promise<StoredActivity[]> {
-  return listActivitiesSince(uid, periodStartIso(period, now));
+  return activityRepository.listSince(uid, periodStartIso(period, now));
 }
 
 /**
@@ -60,7 +55,7 @@ export async function listActivities(
  * @throws ApiError(404) if the activity does not exist.
  */
 export async function removeActivity(uid: string, id: string): Promise<void> {
-  const deleted = await deleteActivity(uid, id);
+  const deleted = await activityRepository.remove(uid, id);
   if (!deleted) {
     throw new ApiError('not_found', 'Activity not found');
   }

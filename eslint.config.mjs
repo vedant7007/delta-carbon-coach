@@ -36,8 +36,8 @@ const eslintConfig = [
           alphabetize: { order: 'asc', caseInsensitive: true },
         },
       ],
-      // Only warn/error logging in production code (server observability).
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+      // All logging must go through the structured logger, not raw console.
+      'no-console': 'error',
     },
   },
   {

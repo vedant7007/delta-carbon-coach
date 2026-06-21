@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ZodError, type z, type ZodTypeAny } from 'zod';
+import { describeError, logger } from './logger';
 
 /**
  * Structured error shape returned by every route: `{ error: { code, message } }`.
@@ -112,7 +113,7 @@ export async function runGuarded(
       return errorResponse('bad_request', 'Validation failed', flattenZod(err));
     }
     // Log server-side only; never echo the message to the client.
-    console.error('Unhandled route error:', err);
+    logger.error('Unhandled route error', { error: describeError(err) });
     return errorResponse('internal', 'Something went wrong. Please try again.');
   }
 }

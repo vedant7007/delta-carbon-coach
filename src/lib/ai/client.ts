@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { AI_REQUEST_TIMEOUT_MS, GEMINI_DEFAULT_MODEL } from './constants';
+import { getServerConfig } from '@/lib/config/env';
+import { AI_REQUEST_TIMEOUT_MS } from './constants';
 
 /**
  * Server-only Gemini access. The key lives in Secret Manager and is never
@@ -7,12 +8,8 @@ import { AI_REQUEST_TIMEOUT_MS, GEMINI_DEFAULT_MODEL } from './constants';
  * is absent, callers fall back to deterministic behaviour.
  */
 
-/** True only when AI is not force-disabled AND an API key is configured. */
-export function isAiEnabled(): boolean {
-  return process.env.AI_DISABLED !== '1' && Boolean(process.env.GEMINI_API_KEY);
-}
-
-const MODEL = process.env.GEMINI_MODEL ?? GEMINI_DEFAULT_MODEL;
+// Re-exported from the central config so callers keep a single import surface.
+export { isAiEnabled } from '@/lib/config/env';
 
 /**
  * Runs a prompt against Gemini with a hard timeout.
@@ -25,12 +22,12 @@ export async function generateText(
   prompt: string,
   timeoutMs: number = AI_REQUEST_TIMEOUT_MS,
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('AI not configured');
+  const { geminiApiKey, geminiModel } = getServerConfig();
+  if (!geminiApiKey) throw new Error('AI not configured');
 
-  const genAI = new GoogleGenerativeAI(apiKey);
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
   const model = genAI.getGenerativeModel({
-    model: MODEL,
+    model: geminiModel,
     generationConfig: { temperature: 0, responseMimeType: 'application/json' },
   });
 

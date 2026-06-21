@@ -4,6 +4,12 @@
  */
 export * from './types';
 export {
+  EngineError,
+  UnknownFactorError,
+  FactorMismatchError,
+  InvalidValueError,
+} from './errors';
+export {
   FACTORS,
   SWAP_CATALOG,
   findFactor,

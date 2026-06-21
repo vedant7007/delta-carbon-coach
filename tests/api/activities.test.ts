@@ -4,21 +4,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('@/lib/server/auth', () => ({
   requireUser: vi.fn(),
 }));
-vi.mock('@/lib/server/repository/activityRepository', () => ({
-  createActivity: vi.fn(),
-  listActivitiesSince: vi.fn(),
-  deleteActivity: vi.fn(),
+vi.mock('@/lib/server/repository', () => ({
+  activityRepository: { create: vi.fn(), listSince: vi.fn(), remove: vi.fn() },
 }));
 
 import { requireUser } from '@/lib/server/auth';
-import {
-  createActivity,
-  listActivitiesSince,
-  deleteActivity,
-} from '@/lib/server/repository/activityRepository';
+import { activityRepository } from '@/lib/server/repository';
 import { POST, GET } from '@/app/api/activities/route';
 import { DELETE } from '@/app/api/activities/[id]/route';
 import { ApiError } from '@/lib/server/http';
+
+const create = vi.mocked(activityRepository.create);
+const listSince = vi.mocked(activityRepository.listSince);
+const remove = vi.mocked(activityRepository.remove);
 
 const authed = { uid: 'user-1', email: 'a@b.com' };
 
@@ -38,16 +36,13 @@ beforeEach(() => {
 
 describe('POST /api/activities', () => {
   it('logs a manual activity with a server-computed number (201)', async () => {
-    vi.mocked(createActivity).mockImplementation(async (_uid, data) => ({
-      id: 'a1',
-      ...data,
-    }));
+    create.mockImplementation(async (_uid, data) => ({ id: 'a1', ...data }));
     const res = await POST(req({ factorId: 'transport.car.petrol', amount: 30 }));
     expect(res.status).toBe(201);
     const json = await res.json();
     // 30 km * 0.17 = 5.1 — server recomputes, ignores any client number.
     expect(json.activity.kgCO2e).toBeCloseTo(5.1);
-    expect(vi.mocked(createActivity)).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledOnce();
   });
 
   it('rejects an unknown factor (400 with field detail)', async () => {
@@ -82,7 +77,7 @@ describe('POST /api/activities', () => {
 
 describe('GET /api/activities', () => {
   it('lists activities for the default period', async () => {
-    vi.mocked(listActivitiesSince).mockResolvedValue([
+    listSince.mockResolvedValue([
       { id: 'a1', factorId: 'food.beef', amount: 1, kgCO2e: 60, loggedAt: 'x', source: 'manual' },
     ]);
     const res = await GET(req(undefined, { url: 'http://localhost/api/activities?period=week' }));
@@ -103,14 +98,14 @@ describe('DELETE /api/activities/[id]', () => {
   const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
 
   it('deletes an owned activity', async () => {
-    vi.mocked(deleteActivity).mockResolvedValue(true);
+    remove.mockResolvedValue(true);
     const res = await DELETE(req(undefined, { url: 'http://localhost/api/activities/a1' }), ctx('a1'));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
   });
 
   it('returns 404 for a missing/unowned activity', async () => {
-    vi.mocked(deleteActivity).mockResolvedValue(false);
+    remove.mockResolvedValue(false);
     const res = await DELETE(
       req(undefined, { url: 'http://localhost/api/activities/missing' }),
       ctx('missing'),

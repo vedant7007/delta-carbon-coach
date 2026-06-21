@@ -2,14 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PeriodToggle } from '@/components/ui/PeriodToggle';
-import { useApi } from '@/lib/apiClient';
 import type { FootprintSummary } from '@/lib/dto';
 import { roundForDisplay, type Period } from '@/lib/engine';
+import { useFootprintSummary } from '@/lib/hooks/useFootprintSummary';
 
 const CategoryDonut = dynamic(() => import('@/components/charts/CategoryDonut'), {
   ssr: false,
@@ -37,30 +37,9 @@ export default function DashboardPage() {
   );
 }
 
-type LoadStatus = 'loading' | 'ready' | 'error';
-
 function DashboardContent() {
-  const api = useApi();
   const [period, setPeriod] = useState<Period>('week');
-  const [data, setData] = useState<FootprintSummary | null>(null);
-  const [status, setStatus] = useState<LoadStatus>('loading');
-
-  const load = useCallback(
-    async (p: Period) => {
-      setStatus('loading');
-      try {
-        setData(await api<FootprintSummary>(`/api/footprint/summary?period=${p}`));
-        setStatus('ready');
-      } catch {
-        setStatus('error');
-      }
-    },
-    [api],
-  );
-
-  useEffect(() => {
-    void load(period);
-  }, [load, period]);
+  const { data, status, reload } = useFootprintSummary(period);
 
   return (
     <div className="space-y-6">
@@ -74,7 +53,7 @@ function DashboardContent() {
           <p className="text-[var(--color-danger)]">
             We couldn&apos;t load your footprint. Please refresh to try again.
           </p>
-          <Button className="mt-3" size="sm" onClick={() => void load(period)}>
+          <Button className="mt-3" size="sm" onClick={reload}>
             Retry
           </Button>
         </Card>

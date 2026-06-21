@@ -1,3 +1,4 @@
+import { UnknownFactorError } from './errors';
 import type { Category, EmissionFactor, SwapDefinition } from './types';
 
 /**
@@ -411,11 +412,16 @@ export function findFactor(id: string): EmissionFactor | undefined {
   return FACTOR_MAP.get(id);
 }
 
-/** Returns the factor for an id, or throws if unknown. */
+/**
+ * Resolves a factor by id.
+ * @param id - The factor id.
+ * @returns The matching {@link EmissionFactor}.
+ * @throws {UnknownFactorError} If the id is not in the dataset.
+ */
 export function getFactor(id: string): EmissionFactor {
   const factor = FACTOR_MAP.get(id);
   if (!factor) {
-    throw new Error(`Unknown emission factor: "${id}"`);
+    throw new UnknownFactorError(id);
   }
   return factor;
 }
